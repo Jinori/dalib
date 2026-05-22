@@ -73,6 +73,29 @@ public sealed class MetaFile : Collection<MetaFileEntry>, ISavable
 
         return new MetaFile(decompressor);
     }
+
+    /// <summary>
+    ///     Loads a MetaFile from an in-memory byte buffer. Mirrors <see cref="FromFile"/> but takes
+    ///     raw bytes instead of a file path — required for environments without filesystem access
+    ///     (e.g. browser / WASM, where the metafile arrives over the wire).
+    /// </summary>
+    /// <param name="bytes">
+    ///     The raw bytes of the file.
+    /// </param>
+    /// <param name="isCompressed">
+    ///     A value indicating whether the bytes are zlib-compressed.
+    /// </param>
+    public static MetaFile FromBuffer(byte[] bytes, bool isCompressed)
+    {
+        using var stream = new MemoryStream(bytes);
+
+        if (!isCompressed)
+            return new MetaFile(stream);
+
+        using var decompressor = new ZLibStream(stream, CompressionMode.Decompress);
+
+        return new MetaFile(decompressor);
+    }
     #endregion
 
     #region SaveTo
